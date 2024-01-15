@@ -1,0 +1,14 @@
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.GeneratedMSBuildEditorConfig.editorconfig
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.AssemblyInfoInputs.cache
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.AssemblyInfo.cs
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.csproj.CoreCompileInputs.cache
+C:\My ProjectCSharp\ZA_check\ZA_check\bin\Debug\net6.0\ZA_check.exe
+C:\My ProjectCSharp\ZA_check\ZA_check\bin\Debug\net6.0\ZA_check.deps.json
+C:\My ProjectCSharp\ZA_check\ZA_check\bin\Debug\net6.0\ZA_check.runtimeconfig.json
+C:\My ProjectCSharp\ZA_check\ZA_check\bin\Debug\net6.0\ZA_check.dll
+C:\My ProjectCSharp\ZA_check\ZA_check\bin\Debug\net6.0\ZA_check.pdb
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.dll
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\refint\ZA_check.dll
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.pdb
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ZA_check.genruntimeconfig.cache
+C:\My ProjectCSharp\ZA_check\ZA_check\obj\Debug\net6.0\ref\ZA_check.dll
