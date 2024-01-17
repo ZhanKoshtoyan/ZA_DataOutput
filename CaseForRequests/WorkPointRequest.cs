@@ -24,7 +24,7 @@ public class WorkPointRequest : IRequest
     public double AirDensity { get; set; }
     public string ArticleNo { get; set; }
 
-    public string Request => Methods.RequestString(Cmd, CmdParam, Pf, Pf, SessionId, FanSize, ArticleNo, AirDensity);
+    public string Request => Methods.RequestString(Cmd, CmdParam, SessionId, FanSize, ArticleNo, airDensity: AirDensity, qv: Pf, pf: Pf);
 
 };
 

@@ -28,10 +28,8 @@ public static class FanSelectionApi
         }
     }
 
-    public static string MakeRequest(string sessionId)
+    public static string MakeRequest(string requestString)
     {
-        var requestString = Methods.RequestString("get_chart_data", "air_performance", 2500, 50, sessionId, 225, "130614/0Z01");
-
         /*var requestString = "{" +
             "'username' : 'ZAFS48467'," +
             "'password' : 'ee1iio'," +

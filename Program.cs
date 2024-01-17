@@ -1,69 +1,151 @@
-﻿
+﻿using System.Globalization;
 using System.Text.Json;
-using ZA_check;
-using ZA_check.Noise;
+using ZA_check.CaseForRequests;
+using ZA_check.NoiseLw;
+using ZA_check.TotalNoiseLw;
 using ZA_check.WorkPoint;
 
-/*Console.WriteLine("Введите данные по рабочей точке");
-var inputDataWorkPoint = Console.ReadLine();
-// Создание объекта для сериализации
-var dataI = new { InputData = inputDataWorkPoint };
-var json = JsonSerializer.Serialize(inputDataWorkPoint,
-    new JsonSerializerOptions
+namespace ZA_check;
+
+internal class Program
+{
+    private static void Main(string[] args)
     {
-        WriteIndented = true
-    }
-);
-File.WriteAllText("DataNoise.json", json);*/
+        Console.WriteLine("Введите типоразмер колеса");
+        var stringFanSize = Console.ReadLine();
 
-/*Console.WriteLine("Введите наименование листа Excel");
-var inputNameSheet = Console.ReadLine();
-if (inputNameSheet == null)
-{
-    throw new Exception("Наименование листа Excel не может быть пустым");
-}
+        var result = int.TryParse(stringFanSize, out var intFanSize);
+        if (!result)
+        {
+            throw new ArgumentException(
+                "Значение 'Исполнение вентилятора' не является числом."
+            );
+        }
+        //-----------------------------------------------------------------------------------------------------------
 
-// Создаем массив с информацией о файлах
-var fileData = new[]
-{
-    new { FileName = "ChartData.json", DataType = typeof(AirPerformance) },
-    new { FileName = "DataNoise.json", DataType = typeof(Acoustics) }
-};
+        Console.WriteLine("Введите артикул вентилятора");
+        var stringArticleNo = Console.ReadLine();
 
-const string pathExcelFile = "D:\\3. Таблица ограничений параметров по подбору оборудования v1.3.xlsm";
+        if (string.IsNullOrEmpty(stringArticleNo))
+        {
+            throw new ArgumentException(
+                "Значение 'Артикул вентилятора' не должно быть пустым."
+            );
+        }
+        //-----------------------------------------------------------------------------------------------------------
 
-// Проходимся по каждому файлу в цикле
-foreach (var data in fileData)
-{
-    var filePath = Path.Combine(Directory.GetCurrentDirectory(), data.FileName);
-
-    object chartData = null;
-    switch (data.FileName)
-    {
-        case "ChartData.json":
-            chartData = JsonLoader.Download<AirPerformance>(filePath, data.DataType);
-            Console.WriteLine("Файл загружен");
-            var excelWriter = new ExcelWriter<AirPerformance>(pathExcelFile, chartData as AirPerformance, inputNameSheet);
-            break;
-        case "DataNoise.json":
-            chartData = JsonLoader.Download<Acoustics>(filePath, data.DataType);
-            Console.WriteLine("Файл загружен");
-            var writer = new ExcelWriter<Acoustics>(pathExcelFile, chartData as Acoustics, inputNameSheet);
-            break;
-    }
-
-}*/
-
-class Program
-{
-    static void Main(string[] args)
-    {
+        //Запрос аэродинамических характеристик
         var sessionId = FanSelectionApi.GetSessionId();
-        var responseString = FanSelectionApi.MakeRequest(sessionId);
+        var requestString = Methods.RequestString(
+            "get_chart_data",
+            "air_performance",
+            sessionId,
+            intFanSize = 225,
+            stringArticleNo = "130614/0Z01"
+        );
+        var responseString = FanSelectionApi.MakeRequest(requestString);
         Console.WriteLine(responseString);
+
+        var pathJsonFile = Path.Combine(Directory.GetCurrentDirectory(), "ChartData.json");
+        var file = File.CreateText(pathJsonFile);
+        file.WriteLine(responseString);
+        Console.WriteLine(responseString);
+        file.Close();
+
+        /*Console.WriteLine("Введите наименование листа Excel");
+    var inputNameSheet = Console.ReadLine();
+    if (inputNameSheet == null)
+    {
+        throw new Exception("Наименование листа Excel не может быть пустым");
+    }*/
+
+        var inputNameSheet = stringArticleNo.Replace("/", "_");
+
+
+        // Создаем массив с информацией о файлах
+        var fileData = new[]
+        {
+            new { FileName = "ChartData.json", DataType = typeof(AirPerformance) },
+            // new {FileName = "DataNoise.json", DataType = typeof(TotalAcousticsLw) }
+        };
+
+        const string pathExcelFile = "D:\\3. Таблица ограничений параметров по подбору оборудования v1.3.xlsm";
+
+        // Проходимся по каждому файлу в цикле
+        foreach (var data in fileData)
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), data.FileName);
+
+            object? chartData;
+            switch (data.FileName)
+            {
+                case "ChartData.json":
+                    chartData = JsonLoader.Download<AirPerformance>(filePath, data.DataType);
+                    Console.WriteLine("Файл загружен");
+                    var excelWriter = new ExcelWriter<AirPerformance>(pathExcelFile, chartData as AirPerformance, inputNameSheet);
+
+                    for (var workPointIndex = 0; workPointIndex <= excelWriter.ArrWorkPoints?.GetUpperBound(0); workPointIndex++)
+                    {
+                        var acousticRequest = Methods.RequestString("select",
+                            "acoustics_lw5",
+                            sessionId,
+                            intFanSize,
+                            stringArticleNo,
+                            excelWriter.ArrWorkPoints[workPointIndex, 0],
+                            excelWriter.ArrWorkPoints[workPointIndex, 1],
+                            fullOctaveBand: false,
+                            insertGeoData: false,
+                            insertMotorData: false,
+                            insertNominalValues: false
+                        );
+                        responseString = FanSelectionApi.MakeRequest(acousticRequest);
+                        Console.WriteLine(responseString);
+
+                        var acousticsLw = JsonSerializer.Deserialize<AcousticsLw>(responseString) ?? throw new
+                            InvalidOperationException("Строка Json пуста. Невозможно получить объект AcousticsLw");
+
+                        var calcLw5Okt = acousticsLw.CALC_LW5_OKT ?? throw new InvalidOperationException("строка acousticsLw.DATA?.CALC_LW5_OKT пуста");
+                        List<double> fullOctaveBandLw5 = calcLw5Okt.Split(',')
+                            .Select(s => double.Parse(s, CultureInfo.InvariantCulture))
+                            .ToList();
+
+                        ExcelWriter<AcousticsLw>.NoiseLw(pathExcelFile,acousticsLw, inputNameSheet,
+                        fullOctaveBandLw5, workPointIndex);
+                    }
+                    break;
+                case "DataNoise.json":
+                    chartData = JsonLoader.Download<TotalAcousticsLw>(filePath, data.DataType);
+                    Console.WriteLine("Файл загружен");
+                    var writer =
+                        new ExcelWriter<TotalAcousticsLw>(pathExcelFile, chartData as TotalAcousticsLw, inputNameSheet);
+                    break;
+            }
+        }
+
+
+
+
+
+        /*//Запрос шумовых характеристик Lw5
+    // var sessionId = FanSelectionApi.GetSessionId();
+    requestString = Methods.RequestString(
+        "select",
+        "acoustics_lw5",
+        sessionId,
+        intFanSize = 225,
+        stringArticleNo = "130614/0Z01",
+        2500,
+        50,
+        default,
+        1.16D,
+        false,
+        false,
+        false,
+        false
+    );
+    responseString = FanSelectionApi.MakeRequest(requestString);
+    Console.WriteLine(responseString);*/
+
+
     }
 }
-
-
-
-

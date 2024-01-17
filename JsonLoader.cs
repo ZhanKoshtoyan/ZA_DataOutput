@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using ZA_check.WorkPoint;
-using ZA_check.Noise;
 using ZA_check.ToPrint;
 
 namespace ZA_check;

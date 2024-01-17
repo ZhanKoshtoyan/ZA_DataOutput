@@ -3,7 +3,6 @@
 public interface IRequest
 {
     public string Cmd {get; }
-
     public string CmdParam {get; }
 
     /*public double Qv {get; set; }
@@ -36,13 +35,17 @@ public interface IRequest
 
     public const int NominalFrequency = 50;
 
-    public const string FullOctaveBand = "true";
+    public const bool FullOctaveBand = true;
 
-    public const string InsertGeoData = "true";
+    public const bool InsertGeoData = true;
 
-    public const string InsertMotorData = "true";
+    public const bool InsertMotorData = true;
 
-    public const string InsertNominalValues = "true";
+    public const bool InsertNominalValues = true;
+
+    public const double AirDensity = 1.2D;
+
+    public const double SearchTolerance = 10;
 
     /*public AbstractRequest(
         string cmd,

@@ -1,4 +1,4 @@
-﻿using ZA_check.Noise;
+﻿using ZA_check.TotalNoiseLw;
 using ZA_check.WorkPoint;
 
 namespace ZA_check.ToPrint;
@@ -12,7 +12,7 @@ public class ToPrint<T>
            case AirPerformance airPerformance:
                WorkPoint(airPerformance);
                break;
-           case Acoustics acoustics:
+           case TotalAcousticsLw acoustics:
                 Noise(acoustics);
                break;
         }
@@ -40,7 +40,7 @@ public class ToPrint<T>
         }
     }
 
-    private static void Noise(Acoustics? acoustics)
+    private static void Noise(TotalAcousticsLw? acoustics)
     {
         // Пример: Вывод идентификаторов кривых
         if (acoustics?.DATA?.CHART_DATA?.CURVES != null)

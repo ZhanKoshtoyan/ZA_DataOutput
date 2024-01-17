@@ -9,8 +9,8 @@ public record ChartData
     public string? LABEL_Y { get; init; }
     public string? X2_FORMAT { get; set; }
     public double X2_UNIT_KORR_FACTOR { get; set; }
-    public int X_UNIT_FACTOR { get; set; }
-    public int X_UNIT_KORR_FACTOR { get; set; }
-    public int Y_UNIT_FACTOR { get; set; }
-    public int Y_UNIT_KORR_FACTOR { get; set; }
+    public double X_UNIT_FACTOR { get; set; }
+    public double X_UNIT_KORR_FACTOR { get; set; }
+    public double Y_UNIT_FACTOR { get; set; }
+    public double Y_UNIT_KORR_FACTOR { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace ZA_check.Noise;
+﻿namespace ZA_check.TotalNoiseLw;
 
 public class NoiseChartData
 {

@@ -1,18 +1,21 @@
 ﻿namespace ZA_check.CaseForRequests;
 
-public class Methods
+public static class Methods
 {
     public static string RequestString(
         string cmd,
         string cmdParam,
-        double qv,
-        double pf,
         string sessionId,
         int fanSize,
-        string
-            articleNo,
-        double
-            airDensity = 1.2D
+        string articleNo,
+        double qv = 0,
+        double psf = 0,
+        double pf = 0,
+        double airDensity = IRequest.AirDensity,
+        bool fullOctaveBand = IRequest.FullOctaveBand,
+        bool insertGeoData = IRequest.InsertGeoData,
+        bool insertMotorData = IRequest.InsertMotorData,
+        bool insertNominalValues = IRequest.InsertNominalValues
     ) =>
         "{" +
         $"'username' : '{IRequest.Username}'," +
@@ -24,17 +27,18 @@ public class Methods
         $"'spec_products' : '{IRequest.SpecProducts}'," +
         $"'product_range' : '{IRequest.ProductRange}'," +
         $"'qv' : '{qv}'," +
-        $"'pf' : '{pf}'," +
+        $"'psf' : '{psf}'," +
         $"'current_phase' : '{IRequest.CurrentPhase}'," +
         $"'voltage' : '{IRequest.Voltage}'," +
         $"'nominal_frequency' : '{IRequest.NominalFrequency}'," +
         $"'sessionid' : '{sessionId}'," +
-        $"'full_octave_band' : '{IRequest.FullOctaveBand}'," +
-        $"'insert_geo_data' : '{IRequest.InsertGeoData}'," +
-        $"'insert_motor_data' : '{IRequest.InsertMotorData}'," +
-        $"'insert_nominal_values' : '{IRequest.InsertNominalValues}'," +
+        $"'full_octave_band' : '{fullOctaveBand.ToString()}'," +
+        $"'insert_geo_data' : '{insertGeoData.ToString()}'," +
+        $"'insert_motor_data' : '{insertMotorData.ToString()}'," +
+        $"'insert_nominal_values' : '{insertNominalValues.ToString()}'," +
         $"'fan_size' : '{fanSize}'," +
         $"'air_density' : '{airDensity}'," +
         $"'article_no' : '{articleNo}'," +
+        $"'search_tolerance' : '{IRequest.SearchTolerance}'," +
         "}";
 }
