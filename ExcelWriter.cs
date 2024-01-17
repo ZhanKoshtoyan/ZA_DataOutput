@@ -10,19 +10,35 @@ namespace ZA_check;
 
 public class ExcelWriter<T>
 {
-    public ExcelWriter(string? pathExcelFile, T? t, string nameSheet, string sessionId, int intFanSize, string
-    stringArticleNo, double airDensity = 1.2D, int
-    firstRow = 21,
-     bool
-    outputNoiseData =
-    false)
+    public ExcelWriter(
+        string? pathExcelFile,
+        T? t, string nameSheet,
+        string sessionId,
+        int intFanSize,
+        string stringArticleNo,
+        double airDensity = 1.2D,
+        int firstRow = 21,
+        bool outputNoiseData = false,
+        bool outputPl = false,
+        bool outputP1 = false,
+        bool outputPsys = false)
     {
         switch (t)
         {
             case AirPerformance airPerformance:
-                WorkPoint(pathExcelFile, airPerformance, nameSheet, sessionId, intFanSize, stringArticleNo, airDensity,
-                firstRow,
-                outputNoiseData);
+                WorkPoint(
+                    pathExcelFile,
+                    airPerformance,
+                    nameSheet,
+                    sessionId,
+                    intFanSize,
+                    stringArticleNo,
+                    airDensity,
+                    firstRow,
+                    outputNoiseData,
+                    outputPl,
+                    outputP1,
+                    outputPsys);
                 break;
             case TotalAcousticsLw totalAcousticsLw:
                 TotalNoiseLw(pathExcelFile, totalAcousticsLw, nameSheet, firstRow);
@@ -39,7 +55,10 @@ public class ExcelWriter<T>
         string stringArticleNo,
         double airDensity,
         int firstRow,
-        bool outputNoiseData
+        bool outputNoiseData,
+        bool outputPl,
+        bool outputP1,
+        bool outputPsys
     )
     {
         var arrQv = new List<double>(30);
@@ -72,6 +91,7 @@ public class ExcelWriter<T>
             const int columnMaxCurve = 2;
             const int columnMinCurve = 28;
             const int indexCurve = 0;
+            var dataPointNo = 1;
 
             //Запускаем цикл для кривых №1,2 (MAX; MIN);
             for (var i = indexCurve; i < 2; i++)
@@ -94,6 +114,15 @@ public class ExcelWriter<T>
 
                     if (i == 0)
                     {
+                        if (dataPointNo == 1)
+                        {
+                            worksheet.Cells[1, 3].Value = intFanSize;
+                            worksheet.Cells[8, 3].Value = 20;
+                            worksheet.Cells[10, 3].Value = airDensity;
+                        }
+
+                        worksheet.Cells[row, 1].Value = dataPointNo;
+                        dataPointNo++;
                         arrQv.Add(dataPoint.QV);
                         arrPsf.Add(dataPoint.PSF);
                     }
@@ -157,7 +186,10 @@ public class ExcelWriter<T>
                     .ToList();
 
                 ExcelWriter<AcousticsLw>.NoiseLw(package, acousticsLw, nameSheet,
-                    fullOctaveBandLw5, workPointIndex);
+                    fullOctaveBandLw5, workPointIndex,
+                    outputPl: outputPl,
+                    outputP1: outputP1,
+                    outputPsys: outputPsys);
             }
         }
         //--------------------------------------------------------------------
@@ -236,7 +268,10 @@ public class ExcelWriter<T>
         string nameSheet,
         IReadOnlyList<double> fullOctaveBandLw5,
         int selectRow,
-        int firstRow = 21
+        int firstRow = 21,
+        bool outputPl = false,
+        bool outputP1 = false,
+        bool outputPsys = false
     )
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -254,20 +289,55 @@ public class ExcelWriter<T>
         //Запускаем цикл заполнения данных из файла JSON в EXCEL
         if (acousticsLw?.CALC_LW5_OKT != null)
         {
+            const int columnDynamicPressure = 4;
+            const int columnTotalPressure = 5;
+            const int columnPower = 6;
+            const int columnTotalEfficiency = 7;
             const int columnRotationSpeed = 8;
             const int columnLw5OctaveNoiseStart = 9;
             var row = firstRow + selectRow;
+            const int columnAirVelocity = 18;
 
-            //Указываем скорость вращения колеса;
+            //Указываем номинальную скорость вращения колеса;
+            if (selectRow == 0)
+            {
+                worksheet.Cells[7, 3].Value = acousticsLw.ZA_N;
+                worksheet.Cells[9, 3].Value = acousticsLw.CALC_ALTITUDE;
+                worksheet.Cells[16, 1].Value = acousticsLw.TYPE;
+                worksheet.Cells[firstRow - 6, columnRotationSpeed].Value = "NOMINAL_SPEED";
+                worksheet.Cells[firstRow - 5, columnRotationSpeed].Value = Convert.ToInt32(acousticsLw.NOMINAL_SPEED);
+                worksheet.Cells[firstRow - 6, columnRotationSpeed+1].Value = "MAX_SPEED";
+                worksheet.Cells[firstRow - 5, columnRotationSpeed+1].Value = Convert.ToInt32(acousticsLw.ZA_NMAX);
+            }
+            //Указываем расчетную скорость вращения колеса;
             worksheet.Cells[row, columnRotationSpeed].Value = acousticsLw.ZA_N;
+            //Указываем динамическое давление;
+            worksheet.Cells[row, columnDynamicPressure].Value = acousticsLw.ZA_PD;
+            //Указываем полное давление;
+            worksheet.Cells[row, columnTotalPressure].Value = acousticsLw.ZA_PF;
+            //Указываем мощность на валу;
+            if (outputPl) { worksheet.Cells[row, columnPower].Value = Math.Round(acousticsLw.ZA_PL / 1000, 2); }
+            // Указываем потребляемую электрическую мощность;
+            if (outputP1) { worksheet.Cells[row, columnPower].Value = Math.Round(acousticsLw.ZA_P1 / 1000, 2); }
+            // Указываем электрическую мощность, потребляемой системой;
+            if (outputPsys) { worksheet.Cells[row, columnPower].Value = Math.Round(acousticsLw.ZA_PSYS / 1000, 2); }
+            //Указываем полный КПД;
+            worksheet.Cells[row, columnTotalEfficiency].Value = acousticsLw.ZA_ETAF;
+            //Указываем скорость воздуха;
+            worksheet.Cells[row, columnAirVelocity].Value = acousticsLw.AIR_VELOCITY;
 
+            var arrayOctaveNoise = new List<double>();
             for (int columnOctaveNoise = columnLw5OctaveNoiseStart, indexOctaveNoiseList = 0;
                 indexOctaveNoiseList < fullOctaveBandLw5.Count;
                 columnOctaveNoise++, indexOctaveNoiseList++)
             {
                 //Записываем значение каждой октавы Lw5 в ячейку листа Excel;
                 worksheet.Cells[row, columnOctaveNoise].Value = fullOctaveBandLw5[indexOctaveNoiseList];
+                arrayOctaveNoise.Add(fullOctaveBandLw5[indexOctaveNoiseList]);
             }
+
+            var sum = arrayOctaveNoise.Sum(singleOctave => Math.Pow(10, singleOctave / 10));
+            worksheet.Cells[row, 17].Value = Math.Round(10 * Math.Log10(sum), 2);
         }
 
         /*// Сохранение файла

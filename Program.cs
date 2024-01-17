@@ -92,7 +92,8 @@ internal class Program
                     chartData = JsonLoader.Download<AirPerformance>(filePath, data.DataType);
                     Console.WriteLine("Файл загружен");*/
                     var excelWriter = new ExcelWriter<AirPerformance>(pathExcelFile, chartData as AirPerformance,
-                    inputNameSheet, sessionId, intFanSize, stringArticleNo, airDensity:doubleAirDensity, outputNoiseData: true);
+                    inputNameSheet, sessionId, intFanSize, stringArticleNo, airDensity:doubleAirDensity,
+                    outputNoiseData: true, outputP1: true);
 
                     /*break;
                 case "DataNoise.json":
