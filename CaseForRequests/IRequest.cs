@@ -5,18 +5,6 @@ public interface IRequest
     public string Cmd {get; }
     public string CmdParam {get; }
 
-    /*public double Qv {get; set; }
-
-    public double Pf {get; set; }
-
-    public string SessionId {get; set; }
-
-    public int FanSize {get; set; }
-
-    public double AirDensity {get; set; }
-
-    public string ArticleNo {get; set; }*/
-
     public const string Username = "ZAFS48467";
 
     public const string Password = "ee1iio";
@@ -46,26 +34,5 @@ public interface IRequest
     public const double AirDensity = 1.2D;
 
     public const double SearchTolerance = 10;
-
-    /*public AbstractRequest(
-        string cmd,
-        string cmdParam,
-        string qv,
-        string pf,
-        string sessionId,
-        string articleNo,
-        int fanSize,
-        double airDensity
-    )
-    {
-        _cmd = cmd;
-        _cmdParam = cmdParam;
-        _qv = qv;
-        _pf = pf;
-        _sessionId = sessionId;
-        _articleNo = articleNo;
-        _fanSize = fanSize;
-        _airDensity = airDensity;
-    }*/
 }
 

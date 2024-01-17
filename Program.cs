@@ -34,6 +34,24 @@ internal class Program
         }
         //-----------------------------------------------------------------------------------------------------------
 
+        Console.WriteLine("Введите плотность воздуха (опционально)");
+        var stringAirDensity = Console.ReadLine();
+
+        result = double.TryParse(
+            stringAirDensity?.Replace(".", ","),
+            out var doubleAirDensity
+        );
+
+        if (!result && !string.IsNullOrEmpty(stringAirDensity))
+        {
+            throw new ArgumentException(
+                "Значение 'Плотность воздуха' не является числом."
+            );
+        }
+
+        doubleAirDensity = Math.Round(doubleAirDensity, 2);
+        //-----------------------------------------------------------------------------------------------------------
+
         //Запрос аэродинамических характеристик
         var sessionId = FanSelectionApi.GetSessionId();
         var requestString = Methods.RequestString(
@@ -41,7 +59,8 @@ internal class Program
             "air_performance",
             sessionId,
             intFanSize = 225,
-            stringArticleNo = "130614/0Z01"
+            stringArticleNo = "130614/0Z01",
+            airDensity: doubleAirDensity
         );
         var responseString = FanSelectionApi.MakeRequest(requestString);
         Console.WriteLine(responseString);
@@ -82,9 +101,10 @@ internal class Program
                 case "ChartData.json":
                     chartData = JsonLoader.Download<AirPerformance>(filePath, data.DataType);
                     Console.WriteLine("Файл загружен");
-                    var excelWriter = new ExcelWriter<AirPerformance>(pathExcelFile, chartData as AirPerformance, inputNameSheet);
+                    var excelWriter = new ExcelWriter<AirPerformance>(pathExcelFile, chartData as AirPerformance,
+                    inputNameSheet, sessionId, intFanSize, stringArticleNo, airDensity:doubleAirDensity, outputNoiseData: true);
 
-                    for (var workPointIndex = 0; workPointIndex <= excelWriter.ArrWorkPoints?.GetUpperBound(0); workPointIndex++)
+                    /*for (var workPointIndex = 0; workPointIndex <= excelWriter.ArrWorkPoints?.GetUpperBound(0); workPointIndex++)
                     {
                         var acousticRequest = Methods.RequestString("select",
                             "acoustics_lw5",
@@ -111,41 +131,15 @@ internal class Program
 
                         ExcelWriter<AcousticsLw>.NoiseLw(pathExcelFile,acousticsLw, inputNameSheet,
                         fullOctaveBandLw5, workPointIndex);
-                    }
+                    }*/
                     break;
                 case "DataNoise.json":
-                    chartData = JsonLoader.Download<TotalAcousticsLw>(filePath, data.DataType);
+                    /*chartData = JsonLoader.Download<TotalAcousticsLw>(filePath, data.DataType);
                     Console.WriteLine("Файл загружен");
                     var writer =
-                        new ExcelWriter<TotalAcousticsLw>(pathExcelFile, chartData as TotalAcousticsLw, inputNameSheet);
+                        new ExcelWriter<TotalAcousticsLw>(pathExcelFile, chartData as TotalAcousticsLw, inputNameSheet);*/
                     break;
             }
         }
-
-
-
-
-
-        /*//Запрос шумовых характеристик Lw5
-    // var sessionId = FanSelectionApi.GetSessionId();
-    requestString = Methods.RequestString(
-        "select",
-        "acoustics_lw5",
-        sessionId,
-        intFanSize = 225,
-        stringArticleNo = "130614/0Z01",
-        2500,
-        50,
-        default,
-        1.16D,
-        false,
-        false,
-        false,
-        false
-    );
-    responseString = FanSelectionApi.MakeRequest(requestString);
-    Console.WriteLine(responseString);*/
-
-
     }
 }

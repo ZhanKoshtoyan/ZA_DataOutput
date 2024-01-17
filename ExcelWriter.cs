@@ -1,4 +1,7 @@
 ﻿using OfficeOpenXml;
+using System.Globalization;
+using System.Text.Json;
+using ZA_check.CaseForRequests;
 using ZA_check.NoiseLw;
 using ZA_check.TotalNoiseLw;
 using ZA_check.WorkPoint;
@@ -7,32 +10,41 @@ namespace ZA_check;
 
 public class ExcelWriter<T>
 {
-    public double[,]? ArrWorkPoints { get; set; }
-    public ExcelWriter(string? pathExcelFile, T? t, string nameSheet, int firstRow = 21)
+    public ExcelWriter(string? pathExcelFile, T? t, string nameSheet, string sessionId, int intFanSize, string
+    stringArticleNo, double airDensity = 1.2D, int
+    firstRow = 21,
+     bool
+    outputNoiseData =
+    false)
     {
         switch (t)
         {
             case AirPerformance airPerformance:
-                ArrWorkPoints = WorkPoint(pathExcelFile, airPerformance, nameSheet, firstRow);
+                WorkPoint(pathExcelFile, airPerformance, nameSheet, sessionId, intFanSize, stringArticleNo, airDensity,
+                firstRow,
+                outputNoiseData);
                 break;
             case TotalAcousticsLw totalAcousticsLw:
                 TotalNoiseLw(pathExcelFile, totalAcousticsLw, nameSheet, firstRow);
                 break;
         }
-
-
     }
 
-    private static double[,] WorkPoint(
+    private static void WorkPoint(
         string? pathExcelFile,
         AirPerformance? airPerformance,
         string nameSheet,
-        int firstRow
+        string sessionId,
+        int intFanSize,
+        string stringArticleNo,
+        double airDensity,
+        int firstRow,
+        bool outputNoiseData
     )
     {
         var arrQv = new List<double>(30);
         var arrPsf = new List<double>(30);
-        double[,]? arrWorkPoints =
+        double[,] arrWorkPoints =
             { };
 
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -115,12 +127,45 @@ public class ExcelWriter<T>
         worksheet6.Cells[1,1,11,1].Copy(worksheet.Cells[1,1,11,1]);
         worksheet6.Cells[17,1,19,28].Copy(worksheet.Cells[17,1,19,28]);
 
+        //--------------------------------------------------------------------
+        if (outputNoiseData)
+        {
+            for (var workPointIndex = 0; workPointIndex <= arrWorkPoints.GetUpperBound(0); workPointIndex++)
+            {
+                var acousticRequest = Methods.RequestString("select",
+                    "acoustics_lw5",
+                    sessionId,
+                    intFanSize,
+                    stringArticleNo,
+                    arrWorkPoints[workPointIndex, 0],
+                    arrWorkPoints[workPointIndex, 1],
+                    fullOctaveBand: false,
+                    insertGeoData: false,
+                    insertMotorData: false,
+                    insertNominalValues: false,
+                    airDensity: airDensity
+                );
+                var responseString = FanSelectionApi.MakeRequest(acousticRequest);
+                Console.WriteLine(responseString);
+
+                var acousticsLw = JsonSerializer.Deserialize<AcousticsLw>(responseString) ?? throw new
+                    InvalidOperationException("Строка Json пуста. Невозможно получить объект AcousticsLw");
+
+                var calcLw5Okt = acousticsLw.CALC_LW5_OKT ?? throw new InvalidOperationException("строка acousticsLw.DATA?.CALC_LW5_OKT пуста");
+                List<double> fullOctaveBandLw5 = calcLw5Okt.Split(',')
+                    .Select(s => double.Parse(s, CultureInfo.InvariantCulture))
+                    .ToList();
+
+                ExcelWriter<AcousticsLw>.NoiseLw(package, acousticsLw, nameSheet,
+                    fullOctaveBandLw5, workPointIndex);
+            }
+        }
+        //--------------------------------------------------------------------
+
         // Сохранение файла
         package.Save();
         // Закрытие файла
         package.Dispose();
-
-        return arrWorkPoints;
     }
 
     private static void TotalNoiseLw(
@@ -185,21 +230,21 @@ public class ExcelWriter<T>
         package.Dispose();
     }
 
-    public static void NoiseLw(
-        string? pathExcelFile,
+    private static void NoiseLw(
+        ExcelPackage package,
         AcousticsLw? acousticsLw,
         string nameSheet,
-        List<double> fullOctaveBandLw5,
+        IReadOnlyList<double> fullOctaveBandLw5,
         int selectRow,
         int firstRow = 21
     )
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-        // Открытие существующего файла
+        /*// Открытие существующего файла
         var package = new ExcelPackage(
             new FileInfo(pathExcelFile ?? throw new InvalidOperationException("Файл не найден."))
-        );
+        );*/
 
         // выбор листа листа
         var worksheet = package.Workbook.Worksheets[nameSheet];
@@ -225,9 +270,9 @@ public class ExcelWriter<T>
             }
         }
 
-        // Сохранение файла
+        /*// Сохранение файла
         package.Save();
         // Закрытие файла
-        package.Dispose();
+        package.Dispose();*/
     }
 }
